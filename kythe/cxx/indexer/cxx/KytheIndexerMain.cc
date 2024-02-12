@@ -76,11 +76,21 @@ namespace {
 
 int main(int argc, char* argv[]) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
+  // absl::FPrintF(stderr, "Indexer initialize\n");
+  // std::cout << "Indexer initialize" << "\n";
   kythe::InitializeProgram(argv[0]);
   absl::SetProgramUsageMessage(
       IndexerContext::UsageMessage("the Kythe C++ indexer", "indexer"));
   std::vector<char*> remain = absl::ParseCommandLine(argc, argv);
   std::vector<std::string> final_args(remain.begin(), remain.end());
+  // absl::FPrintF(stderr, "Indexer args: ");
+  // std::cout << "Indexer args: ";
+  // for (const std::string &arg : final_args) {
+  //   // std::cout << arg << " ";
+  //   absl::FPrintF(stderr, "%s", arg);
+  // }
+  // absl::FPrintF(stderr, "\n");
+  // std::cout << "\n";
   IndexerContext context(final_args, "stdin.cc");
   IndexerOptions options;
   options.TemplateMode = absl::GetFlag(FLAGS_index_template_instantiations)
@@ -129,6 +139,8 @@ int main(int argc, char* argv[]) {
   NullOutputStream null_stream;
 
   context.EnumerateCompilations([&](IndexerJob& job) {
+    // absl::FPrintF(stderr, "Job.unit: %s\n", job.unit.DebugString());
+    // std::cout << "Indexer job: " << job.DebugString() << "\n";
     kythe::MetadataSupports meta_supports;
     auto proto = std::make_unique<ProtobufMetadataSupport>();
     proto->SetAliasesAsWrites(
@@ -140,6 +152,9 @@ int main(int argc, char* argv[]) {
     library_supports.push_back(std::make_unique<GoogleFlagsLibrarySupport>());
     library_supports.push_back(std::make_unique<GoogleProtoLibrarySupport>());
     library_supports.push_back(std::make_unique<ImputedConstructorSupport>());
+
+    // absl::FPrintF(stderr, "Indexing compilation unit\n");
+    // std::cout << "Job.unit: " << job.unit.DebugString() << "\n";
 
     std::string result = IndexCompilationUnit(
         job.unit, job.virtual_files, *context.claim_client(),

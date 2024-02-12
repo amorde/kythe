@@ -106,7 +106,7 @@ struct XAState {
 static bool ContainsUnsupportedArg(const std::vector<std::string>& args) {
   for (const auto& arg : args) {
     // We do not support compilations using modules yet.
-    if (arg == "-fmodules") {
+    if (arg == "-fmodules" && false) {
       return true;
     }
   }
@@ -212,6 +212,7 @@ static bool LoadExtraAction(const XAState& xa_state,
 
 int main(int argc, char* argv[]) {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
+  std::cout << "PWD: " << std::filesystem::current_path() << "\n";
   kythe::InitializeProgram(argv[0]);
   std::vector<char*> remain = absl::ParseCommandLine(argc, argv);
   if (remain.size() != 4 && remain.size() != 6) {
@@ -237,6 +238,7 @@ int main(int argc, char* argv[]) {
   kythe::ExtractorConfiguration config;
   config.SetPathCanonizalizationPolicy(
       absl::GetFlag(FLAGS_canonicalize_vname_paths));
+  std::cout << "Loading action\n";
   bool success = LoadExtraAction(xa_state, config);
   if (success) {
     config.Extract(kythe::supported_language::Language::kObjectiveC);

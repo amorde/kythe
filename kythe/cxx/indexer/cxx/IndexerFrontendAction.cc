@@ -184,6 +184,7 @@ std::string IndexCompilationUnit(
     IndexerOptions& Options ABSL_ATTRIBUTE_LIFETIME_BOUND,
     const MetadataSupports* MetaSupports,
     const LibrarySupports* LibrarySupports) {
+  // std::cout << "IndexCompilationUnit " << Unit.DebugString() << "\n";
   auto [Root, Style] =
       kythe::IndexVFS::DetectRootStyle(Unit.working_directory());
   HeaderSearchInfo HSI;
@@ -256,11 +257,30 @@ std::string IndexCompilationUnit(
           &Observer, HSIValid ? &HSI : nullptr, LibrarySupports, Options);
   llvm::IntrusiveRefCntPtr<clang::FileManager> FileManager(
       new clang::FileManager(FSO, Options.AllowFSAccess ? nullptr : VFS));
+  // std::vector<std::string> Args;
+  // std::string ignored ("-index-store-path");
+  // std::string ignored2 ("DEBUG_PREFIX_MAP_PWD");
+  // bool skipNext = false;
+  // for (const std::string& input : Unit.argument()) {
+  //   if (input.find(ignored) != std::string::npos || input.find(ignored2) != std::string::npos) {
+  //     skipNext = true;
+  //   } else if (skipNext) {
+  //     skipNext = false;
+  //   } else {
+  //     Args.push_back(input);
+  //   }
+  // }
   std::vector<std::string> Args(Unit.argument().begin(), Unit.argument().end());
   Args.insert(Args.begin() + 1, {"-nocudalib", "-w", "-fsyntax-only"});
   if (!FixupArgument.empty()) {
     Args.insert(Args.begin() + 1, FixupArgument);
   }
+
+  absl::FPrintF(stderr, "Clang command: ");
+  for (const std::string& input : Unit.argument()) {
+    absl::FPrintF(stderr, "%s ", input);
+  }
+  absl::FPrintF(stderr, "\n");
 
   // StdinAdjustSingleFrontendActionFactory takes ownership of its action.
   std::unique_ptr<StdinAdjustSingleFrontendActionFactory> Tool =

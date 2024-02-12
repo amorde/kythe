@@ -34,6 +34,7 @@ genrule(
         ":bazel_go_extractor",
         ":bazel_java_extractor",
         ":bazel_jvm_extractor",
+        ":bazel_objc_extractor",
         ":bazel_proto_extractor",
         ":javac_extractor",
         ":javac_wrapper",
@@ -53,6 +54,8 @@ genrule(
         ":misc",
         "//kythe/proto:public",
         "//third_party:licenses",
+        "//third_party/bazel:get_devdir.sh",
+        "//third_party/bazel:get_sdkroot.sh",
         "//kythe/extractors/bazel:extractors_bazelrc",
     ],
     outs = [
@@ -76,6 +79,7 @@ genrule(
         "--cp $(location textproto_indexer) indexers/textproto_indexer",
         "--cp $(location javac_extractor) extractors/javac_extractor.jar",
         "--cp $(location bazel_cxx_extractor) extractors/bazel_cxx_extractor",
+        "--cp $(location bazel_objc_extractor) extractors/bazel_objc_extractor",
         "--cp $(location bazel_extract_kzip) extractors/bazel_extract_kzip",
         "--cp $(location bazel_go_extractor) extractors/bazel_go_extractor",
         "--cp $(location bazel_java_extractor) extractors/bazel_java_extractor.jar",
@@ -89,6 +93,8 @@ genrule(
         "--cp $(location textproto_extractor) extractors/textproto_extractor",
         "--cp $(location cc_proto_metadata_plugin) tools/cc_proto_metadata_plugin",
         "--cp $(location //kythe/extractors/bazel:extractors_bazelrc) ./",
+        "--cp $(location //third_party/bazel:get_devdir.sh) ./",
+        "--cp $(location //third_party/bazel:get_sdkroot.sh) ./",
         "--path tools/ $(locations tools)",
         "--path proto/ $(locations //kythe/proto:public)",
         "--relpaths 'third_party' --path 'third_party' $(locations //third_party:licenses)",
@@ -168,6 +174,11 @@ filegroup(
 filegroup(
     name = "bazel_cxx_extractor",
     srcs = ["//kythe/cxx/extractor:cxx_extractor_bazel"],
+)
+
+filegroup(
+    name = "bazel_objc_extractor",
+    srcs = ["//kythe/cxx/extractor:objc_extractor_bazel"],
 )
 
 filegroup(

@@ -1298,16 +1298,33 @@ void CompilationWriter::WriteIndex(
   }
 
   std::vector<std::string> final_args(args_);
+
+  // std::vector<std::string> final_args;
+  // std::string ignored ("-index-store-path");
+  // std::string ignored2 ("DEBUG_PREFIX_MAP_PWD");
+  // bool skipNext = false;
+  // for (const std::string& input : args_) {
+  //   if (input.find(ignored) != std::string::npos || input.find(ignored2) != std::string::npos) {
+  //     skipNext = true;
+  //   } else if (skipNext) {
+  //     skipNext = false;
+  //   } else {
+  //     final_args.push_back(input);
+  //   }
+  // }
   // Record the target triple in the list of arguments. Put it at the front
   // (after the tool) in the unlikely event that a different triple was
   // supplied in the arguments.
-  final_args.insert(final_args.begin() + 1, triple_);
-  final_args.insert(final_args.begin() + 1, "-target");
+  // final_args.insert(final_args.begin() + 1, triple_);
+  // final_args.insert(final_args.begin() + 1, "-target");
 
+  // std::cout << "extracted command: ";
   for (const auto& arg : final_args) {
+    // std::cout << arg << " ";
     identifying_blob.append(arg);
     unit.add_argument(arg);
   }
+  // std::cout << main_source_file << "\n";
   identifying_blob.append(main_source_file);
   std::string identifying_blob_digest =
       Sha256Hasher(identifying_blob).FinishHexString();
@@ -1469,6 +1486,47 @@ void ExtractorConfiguration::SetArgs(const std::vector<std::string>& args) {
     final_args_.insert(final_args_.begin() + 1, "-resource-dir");
   }
   final_args_.insert(final_args_.begin() + 1, "-DKYTHE_IS_RUNNING=1");
+
+  std::vector<std::string> filtered_args;
+  std::string ignored("-index-store-path");
+  std::string ignored2("DEBUG_PREFIX_MAP_PWD=.");
+  bool skipNext = false;
+  final_args_.erase(std::remove_if(final_args_.begin(), 
+                              final_args_.end(),
+                              [&skipNext,ignored,ignored2](std::string& arg) { 
+    if (llvm::StringRef(arg).starts_with(ignored)) {
+      skipNext = true;
+      return true;
+    } else if (llvm::StringRef(arg).starts_with(ignored2)) {
+      skipNext = false;
+      return true;
+    } else if (skipNext) {
+      skipNext = false;
+      return true;
+    } else {
+      return false;
+    }                            
+  }));
+  // for (int i = final_args_.begin(); i < final_args_.end(); i++) {
+  //   auto arg = final_args_[i];
+  //   auto ref = llvm::StringRef(arg);
+  //   if (ref.starts_with)
+  // }
+  // for (const std::string& input : final_args_) {
+  //   std::cout << "Checking " << input << "\n";
+  //   if (llvm::StringRef(input).starts_with(ignored)) {
+  //     skipNext = true;
+  //     std::cout << "Skip " << input << "\n";
+  //   } else if (llvm::StringRef(input).starts_with(ignored2)) {
+  //     std::cout << "Skip " << input << "\n";
+  //     skipNext = false;
+  //   } else if (skipNext) {
+  //     skipNext = false;
+  //   } else {
+  //     filtered_args.push_back(input);
+  //   }
+  // }
+
   // Store the arguments in the compilation unit post-filtering.
   index_writer_.set_args(final_args_);
   // Disable all warnings when running the extractor, but don't propagate this
@@ -1576,6 +1634,11 @@ bool ExtractorConfiguration::Extract(
                                  transcript, source_files, header_search_info,
                                  had_errors);
       });
+  std::cout << "Running extraction command: ";
+  for (const auto& arg : final_args_) {
+    std::cout << arg << " ";
+  }
+  std::cout << "\n";
   clang::tooling::ToolInvocation invocation(final_args_, std::move(extractor),
                                             file_manager.get());
   return invocation.run();
