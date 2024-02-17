@@ -91,6 +91,11 @@ filegroup(
     srcs = ["extractors/bazel_cxx_extractor"],
 )
 
+filegroup(
+    name = "bazel_objc_extractor",
+    srcs = ["extractors/bazel_objc_extractor"],
+)
+
 java_binary(
     name = "bazel_java_extractor",
     main_class = "com.google.devtools.kythe.extractors.java.bazel.JavaExtractor",
@@ -121,6 +126,16 @@ filegroup(
     srcs = ["extractors/bazel_proto_extractor"],
 )
 
+filegroup(
+    name = "get_devdir",
+    srcs = ["get_devdir.sh"]
+)
+
+filegroup(
+    name = "get_sdkroot",
+    srcs = ["get_sdkroot.sh"]
+)
+
 extractor_action(
     name = "extract_kzip_cxx",
     args = [
@@ -132,6 +147,21 @@ extractor_action(
     extractor = ":bazel_cxx_extractor",
     mnemonics = ["CppCompile"],
     output = "$(ACTION_ID).cxx.kzip",
+)
+
+extractor_action(
+    name = "extract_kzip_objc",
+    args = [
+        "$(EXTRA_ACTION_FILE)",
+        "$(output $(ACTION_ID).objc.kzip)",
+        "$(location :vnames_config)",
+        "$(location :get_devdir)",
+        "$(location :get_sdkroot)",
+    ],
+    data = [":vnames_config", ":get_devdir", ":get_sdkroot"],
+    extractor = ":bazel_objc_extractor",
+    mnemonics = ["ObjcCompile"],
+    output = "$(ACTION_ID).objc.kzip",
 )
 
 extractor_action(
