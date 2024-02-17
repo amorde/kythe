@@ -106,7 +106,7 @@ struct XAState {
 static bool ContainsUnsupportedArg(const std::vector<std::string>& args) {
   for (const auto& arg : args) {
     // We do not support compilations using modules yet.
-    if (arg == "-fmodules") {
+    if (arg == "-fmodules" && false) {
       return true;
     }
   }
