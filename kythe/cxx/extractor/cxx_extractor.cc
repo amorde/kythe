@@ -1318,13 +1318,13 @@ void CompilationWriter::WriteIndex(
   // final_args.insert(final_args.begin() + 1, triple_);
   // final_args.insert(final_args.begin() + 1, "-target");
 
-  // std::cout << "extracted command: ";
+  std::cout << "extracted command: ";
   for (const auto& arg : final_args) {
-    // std::cout << arg << " ";
+    std::cout << arg << " ";
     identifying_blob.append(arg);
     unit.add_argument(arg);
   }
-  // std::cout << main_source_file << "\n";
+  std::cout << main_source_file << "\n";
   identifying_blob.append(main_source_file);
   std::string identifying_blob_digest =
       Sha256Hasher(identifying_blob).FinishHexString();

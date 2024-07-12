@@ -203,7 +203,11 @@ std::string IndexCompilationUnit(
   }
   clang::FileSystemOptions FSO;
   FSO.WorkingDir = Root.value();
+  // FSO.WorkingDir = "/Users/eamorde/Development/register2";
+  absl::FPrintF(stderr, "WorkingDir: %s\n", Root.value());
+  absl::FPrintF(stderr, "Unit.working_directory(): %s\n", Unit.working_directory());
   for (auto& Path : HSI.paths) {
+    absl::FPrintF(stderr, "Adding path: %s\n", Path.path);
     Dirs.push_back(Path.path);
   }
   llvm::IntrusiveRefCntPtr<IndexVFS> VFS(
@@ -257,27 +261,38 @@ std::string IndexCompilationUnit(
           &Observer, HSIValid ? &HSI : nullptr, LibrarySupports, Options);
   llvm::IntrusiveRefCntPtr<clang::FileManager> FileManager(
       new clang::FileManager(FSO, Options.AllowFSAccess ? nullptr : VFS));
-  // std::vector<std::string> Args;
-  // std::string ignored ("-index-store-path");
-  // std::string ignored2 ("DEBUG_PREFIX_MAP_PWD");
-  // bool skipNext = false;
+  std::vector<std::string> Args;
+  std::string ignored ("-index-store-path");
+  std::string ignored2 ("DEBUG_PREFIX_MAP_PWD");
+  bool skipNext = false;
+  auto unitArgs = Unit.argument();
+  for (int i = 0; i < unitArgs.size(); i++) {
+    const std::string& input = unitArgs[i];
+    if (input.find(ignored) != std::string::npos || input.find(ignored2) != std::string::npos) {
+      i++;
+    } else if (input.find("-target") != std::string::npos && unitArgs[i + 1].find("arm64-apple-ios15.0.0-simulator") != std::string::npos) {
+      i++;
+    } else {
+      Args.push_back(input);
+    }
+  }
   // for (const std::string& input : Unit.argument()) {
   //   if (input.find(ignored) != std::string::npos || input.find(ignored2) != std::string::npos) {
   //     skipNext = true;
   //   } else if (skipNext) {
   //     skipNext = false;
-  //   } else {
+  //   } else ifelse {
   //     Args.push_back(input);
   //   }
   // }
-  std::vector<std::string> Args(Unit.argument().begin(), Unit.argument().end());
+  // std::vector<std::string> Args(Unit.argument().begin(), Unit.argument().end());
   Args.insert(Args.begin() + 1, {"-nocudalib", "-w", "-fsyntax-only"});
   if (!FixupArgument.empty()) {
     Args.insert(Args.begin() + 1, FixupArgument);
   }
 
   absl::FPrintF(stderr, "Clang command: ");
-  for (const std::string& input : Unit.argument()) {
+  for (const std::string& input : Args) {
     absl::FPrintF(stderr, "%s ", input);
   }
   absl::FPrintF(stderr, "\n");
